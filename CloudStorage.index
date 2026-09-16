@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> Cloud Storage</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    position:relative;
+    background:
+    linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
+    url("BACKGROUND.jpg");
+    background-size:cover;
+    background-position:center;
+}
+
+/* Animated Gradient */
+body::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(-45deg,#020024,#090979,#00d4ff,#00ffcc);
+    background-size:400% 400%;
+    animation:bgMove 12s ease infinite;
+    opacity:.45;
+}
+@keyframes bgMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+/* Animated Particles */
+body::after{
+    content:"";
+    position:absolute;
+    width:200%;
+    height:200%;
+    background-image:radial-gradient(circle,#00ffff55 2px,transparent 2px);
+    background-size:40px 40px;
+    animation:particles 10s linear infinite;
+}
+@keyframes particles{
+    from{transform:translateY(0);}
+    to{transform:translateY(-200px);}
+}
+
+.container{
+    position:relative;
+    z-index:10;
+    width:700px;
+    max-width:95%;
+    padding:30px;
+    border-radius:25px;
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.2);
+    box-shadow:0 0 20px cyan,0 0 50px #00aaff;
+}
+
+h1{
+    color:#00ffff;
+    text-align:center;
+    text-shadow:0 0 20px cyan;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:white;
+    text-align:center;
+    opacity:.85;
+    margin-bottom:25px;
+}
+
+#fileInput{display:none;}
+
+.choose-btn{
+    width:100%;
+    display:block;
+    text-align:center;
+    padding:15px;
+    cursor:pointer;
+    border-radius:12px;
+    background:linear-gradient(45deg,#00c6ff,#0072ff);
+    color:white;
+    font-weight:bold;
+    transition:.3s;
+    box-shadow:0 0 15px cyan;
+}
+.choose-btn:hover{
+    transform:scale(1.03);
+    box-shadow:0 0 25px cyan,0 0 40px cyan;
+}
+
+#uploadBtn{
+    margin-top:15px;
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    color:white;
+    font-size:16px;
+    font-weight:bold;
+    background:linear-gradient(45deg,#ff00cc,#3333ff);
+    transition:.3s;
+    box-shadow:0 0 20px magenta;
+}
+#uploadBtn:hover{
+    transform:translateY(-3px);
+    box-shadow:0 0 25px magenta,0 0 45px cyan;
+}
+
+.progress{
+    margin-top:20px;
+    background:rgba(255,255,255,.1);
+    border-radius:20px;
+    overflow:hidden;
+    height:12px;
+}
+.progress-bar{
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,cyan,#00ff88);
+    transition:.3s;
+}
+
+#fileInfo{margin-top:20px;}
+
+.preview-card{
+    padding:12px;
+    margin-top:10px;
+    border-radius:10px;
+    color:white;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.2);
+}
+
+h3{
+    color:#00ffff;
+    margin-top:25px;
+}
+
+.file-card{
+    padding:12px;
+    margin-top:10px;
+    border-radius:10px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.2);
+    transition:.3s;
+    cursor:pointer;
+}
+.file-card:hover{
+    transform:scale(1.03);
+    box-shadow:0 0 20px cyan,0 0 40px cyan;
+}
+.file-name{color:white;font-weight:bold;font-size:16px;}
+.file-size{color:#dddddd;margin-top:5px;}
+.open-text{color:#00ffff;margin-top:8px;font-weight:bold;}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1> CLOUD STORAGE</h1>
+    <p class="subtitle">Future IT Professional File Management System</p>
+
+    <label for="fileInput" class="choose-btn">📂 CHOOSE FILES</label>
+    <input type="file" id="fileInput" multiple>
+    <button id="uploadBtn">🚀 UPLOAD FILES</button>
+
+    <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    <div id="fileInfo"></div>
+
+    <h3>☁ MY FILES</h3>
+    <div id="myFiles"></div>
+</div>
+
+<script>
+const fileInput = document.getElementById("fileInput");
+const uploadBtn = document.getElementById("uploadBtn");
+const fileInfo = document.getElementById("fileInfo");
+const myFiles = document.getElementById("myFiles");
+const progressBar = document.getElementById("progressBar");
+
+fileInput.addEventListener("change", () => {
+    let html = "";
+    [...fileInput.files].forEach(file => {
+        html += `
+        <div class="preview-card">
+            📄 <b>${file.name}</b><br>
+            📦 ${(file.size / 1024).toFixed(2)} KB<br>
+            📁 ${file.type || "Unknown Type"}
+        </div>`;
+    });
+    fileInfo.innerHTML = html;
+});
+
+uploadBtn.addEventListener("click", () => {
+    const files = fileInput.files;
+    if(files.length === 0){
+        alert("Please choose files first!");
+        return;
+    }
+
+    let progress = 0;
+    progressBar.style.width = "0%";
+
+    const loading = setInterval(() => {
+        progress += 10;
+        progressBar.style.width = progress + "%";
+
+        if(progress >= 100){
+            clearInterval(loading);
+
+            [...files].forEach(file => {
+                const fileURL = URL.createObjectURL(file);
+                const card = document.createElement("div");
+                card.className = "file-card";
+                card.innerHTML = `
+                    <div class="file-name">✅ ${file.name}</div>
+                    <div class="file-size">📦 ${(file.size / 1024).toFixed(2)} KB</div>
+                    <div class="open-text">🔗 Click to Open</div>
+                `;
+                card.addEventListener("click", () => {
+                    window.open(fileURL, "_blank");
+                });
+                myFiles.appendChild(card);
+            });
+
+            alert("Files uploaded successfully!");
+        }
+    }, 200);
+});
+</script>
+</body>
+</html>
